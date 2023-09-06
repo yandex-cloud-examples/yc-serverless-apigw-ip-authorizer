@@ -1,0 +1,37 @@
+openapi: 3.0.0
+info:
+  title: IP-authorized service
+  version: 1.0.0
+paths:
+  /:
+    get:
+      x-yc-apigateway-integration:
+        type: dummy
+        content:
+          '*': "<html><body><a href='/restricted'>Access restricted resource</a><body></html>"
+        http_code: 200
+        http_headers:
+          Content-Type: text/html
+  /restricted:
+    get:
+      security:
+        - IPAuth: []
+      x-yc-apigateway-integration:
+        type: dummy
+        content:
+          '*': Access allowed!
+        http_code: 200
+        http_headers:
+          Content-Type: text/plain
+components:
+  securitySchemes:
+    IPAuth:
+      type: apiKey # API Key scheme allows to use custom header for authentication
+      in: header
+      name: X-Forwarded-For # Always present in request
+      x-yc-apigateway-authorizer:
+        type: function
+        function_id: ${AUTH_FUNCTION_ID}
+        tag: "$latest"
+        service_account_id: ${GATEWAY_SA_ID}
+        authorizer_result_ttl_in_seconds: 5
